@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Produção - Empresa</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/uuid@8.3.2/dist/umd/uuidv4.min.js"></script>
+  <style>
+    .sidebar {
+      transition: all 0.3s ease;
+    }
+    .sidebar a:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: translateX(5px);
+    }
+    .card {
+      transition: transform 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+    }
+    .modal {
+      backdrop-filter: blur(5px);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans">
+  <!-- Login Modal -->
+  <div id="login-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800">Login</h2>
+      <form id="form-login">
+        <div class="mb-4">
+          <label class="block text-gray-700 mb-2" for="username">Usuário</label>
+          <input type="text" id="username" class="w-full p-3 border rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-gray-700 mb-2" for="password">Senha</label>
+          <input type="password" id="password" class="w-full p-3 border rounded-lg" required>
+        </div>
+        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">Entrar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div id="main-content" class="hidden">
+    <!-- Sidebar -->
+    <nav class="sidebar fixed top-0 left-0 h-full w-64 bg-gray-900 text-white p-6">
+      <h2 class="text-2xl font-bold mb-8">Sistema de Produção</h2>
+      <a href="#" onclick="mostrarTela('dashboard')" class="flex items-center text-gray-300 py-3 px-4 rounded-lg mb-2">
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+        Dashboard
+      </a>
+      <a href="#" onclick="mostrarTela('criar-ficha')" class="flex items-center text-gray-300 py-3 px-4 rounded-lg mb-2">
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        Criar Ficha
+      </a>
+      <a href="#" onclick="mostrarTela('cadastro-clientes')" class="flex items-center text-gray-300 py-3 px-4 rounded-lg mb-2">
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v2h5m-2-5.143A3 3 0 015 17m14-5V5a2 2 0 00-2-2H7a2 2 0 00-2 2v7m14 0H5m14 0a3 3 0 01-3 3m-9-3a3 3 0 013-3m0 0a3 3 0 013 3"></path></svg>
+        Cadastro de Clientes
+      </a>
+      <a href="#" onclick="mostrarTela('visualizar-pedidos')" class="flex items-center text-gray-300 py-3 px-4 rounded-lg mb-2">
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+        Visualizar Pedidos
+      </a>
+      <a href="#" onclick="logout()" class="flex items-center text-gray-300 py-3 px-4 rounded-lg mt-auto">
+        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+        Sair
+      </a>
+    </nav>
+
+    <!-- Content -->
+    <div class="ml-64 p-8">
+      <!-- Dashboard -->
+      <div id="tela-dashboard">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Dashboard</h1>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-semibold text-gray-700">Total de Pedidos</h3>
+            <p id="total-pedidos" class="text-3xl font-bold text-blue-600">0</p>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-semibold text-gray-700">Pedidos em Espera</h3>
+            <p id="pedidos-espera" class="text-3xl font-bold text-yellow-600">0</p>
+          </div>
+          <div class="bg-white p-6 rounded-xl shadow-lg">
+            <h3 class="text-lg font-semibold text-gray-700">Clientes Cadastrados</h3>
+            <p id="total-clientes" class="text-3xl font-bold text-green-600">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Criar Ficha -->
+      <div id="tela-criar-ficha" class="hidden">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Criar Ficha</h1>
+        <!-- Dados do Pedido -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+          <h2 class="text-xl font-semibold text-gray-700 mb-4">Dados do Pedido</h2>
+          <form id="form-pedido" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-gray-700 mb-2" for="id-pedido">ID do Pedido</label>
+              <input type="text" id="id-pedido" class="w-full p-3 border rounded-lg bg-gray-100" readonly>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="cliente">Cliente</label>
+              <select id="cliente" class="w-full p-3 border rounded-lg" onchange="preencherDadosCliente()" required>
+                <option value="">Selecione</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="cidade">Cidade</label>
+              <input type="text" id="cidade" class="w-full p-3 border rounded-lg bg-gray-100" readonly>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="telefone">Telefone</label>
+              <input type="tel" id="telefone" class="w-full p-3 border rounded-lg bg-gray-100" readonly>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="data-entrada">Data de Entrada</label>
+              <input type="date" id="data-entrada" class="w-full p-3 border rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="data-entrega">Data de Entrega</label>
+              <input type="date" id="data-entrega" class="w-full p-3 border rounded-lg" required>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-gray-700 mb-2" for="observacoes">Observações</label>
+              <textarea id="observacoes" class="w-full p-3 border rounded-lg" rows="1"></textarea>
+            </div>
+          </form>
+        </div>
+        <!-- Produções -->
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-6">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-700">Produções</h2>
+            <button class="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700" onclick="adicionarAba()">+ Adicionar Produção</button>
+          </div>
+          <div class="border-b-2 border-gray-200 mb-4">
+            <ul id="tabsProducoes" class="flex space-x-2"></ul>
+          </div>
+          <div id="conteudoTabsProducoes"></div>
+        </div>
+        <!-- Pagamento -->
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <h2 class="text-xl font-semibold text-gray-700 mb-4">Pagamento</h2>
+          <form id="form-pagamento" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-gray-700 mb-2" for="forma-pagamento">Forma de Pagamento</label>
+              <select id="forma-pagamento" class="w-full p-3 border rounded-lg" required>
+                <option value="">Selecione</option>
+                <option value="dinheiro">Dinheiro</option>
+                <option value="cartao">Cartão</option>
+                <option value="boleto">Boleto</option>
+                <option value="pix">PIX</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="valor-total">Valor Total (R$)</label>
+              <input type="number" id="valor-total" step="0.01" min="0" class="w-full p-3 border rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="desconto">Desconto (R$)</label>
+              <input type="number" id="desconto" step="0.01" min="0" class="w-full p-3 border rounded-lg" value="0">
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="valor-adicional">Outros Valores (R$)</label>
+              <input type="number" id="valor-adicional" step="0.01" min="0" class="w-full p-3 border rounded-lg" value="0">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-gray-700 mb-2" for="observacoes-pagamento">Observações de Pagamento</label>
+              <textarea id="observacoes-pagamento" class="w-full p-3 border rounded-lg" rows="3"></textarea>
+            </div>
+            <div class="md:col-span-2 flex space-x-4">
+              <button type="button" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700" onclick="salvarTudo('Salvo')">Salvar Pedido</button>
+              <button type="button" class="bg-yellow-600 text-white p-3 rounded-lg hover:bg-yellow-700" onclick="salvarTudo('Em Espera')">Colocar em Espera</button>
+              <button type="button" class="bg-red-600 text-white p-3 rounded-lg hover:bg-red-700" onclick="confirmarLimpar()">Limpar Tudo</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Cadastro de Clientes -->
+      <div id="tela-cadastro-clientes" class="hidden">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Cadastro de Clientes</h1>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <h2 class="text-xl font-semibold text-gray-700 mb-4">Novo Cliente</h2>
+          <form id="form-cliente" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-gray-700 mb-2" for="nome-cliente">Nome do Cliente</label>
+              <input type="text" id="nome-cliente" class="w-full p-3 border rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="cidade-cliente">Cidade</label>
+              <input type="text" id="cidade-cliente" class="w-full p-3 border rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2" for="telefone-cliente">Telefone</label>
+              <input type="tel" id="telefone-cliente" pattern="[0-9]{10,11}" class="w-full p-3 border rounded-lg" required>
+            </div>
+            <div class="md:col-span-3">
+              <button type="submit" class="bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700">Cadastrar Cliente</button>
+            </div>
+          </form>
+          <div class="mt-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Clientes Cadastrados</h2>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left">
+                <thead>
+                  <tr class="bg-gray-200">
+                    <th class="p-3">Nome</th>
+                    <th class="p-3">Cidade</th>
+                    <th class="p-3">Telefone</th>
+                  </tr>
+                </thead>
+                <tbody id="lista-clientes"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visualizar Pedidos -->
+      <div id="tela-visualizar-pedidos" class="hidden">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Visualizar Pedidos</h1>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="flex flex-col md:flex-row justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-700">Pedidos Cadastrados</h2>
+            <div class="flex space-x-4">
+              <input type="text" id="filtro-cliente" class="p-2 border rounded-lg" placeholder="Filtrar por cliente">
+              <select id="filtro-status" class="p-2 border rounded-lg">
+                <option value="">Todos os Status</option>
+                <option value="Salvo">Salvo</option>
+                <option value="Em Espera">Em Espera</option>
+              </select>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="bg-gray-200">
+                  <th class="p-3">ID</th>
+                  <th class="p-3">Cliente</th>
+                  <th class="p-3">Data de Entrada</th>
+                  <th class="p-3">Data de Entrega</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="lista-pedidos"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="fixed bottom-4 right-4 z-50">
+    <div id="toast-notificacao" class="hidden bg-green-600 text-white p-4 rounded-lg shadow-lg">
+      <p id="toast-mensagem"></p>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirm-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800">Confirmar Ação</h2>
+      <p id="confirm-mensagem" class="mb-6"></p>
+      <div class="flex justify-end space-x-4">
+        <button onclick="fecharModalConfirmacao()" class="bg-gray-600 text-white p-3 rounded-lg hover:bg-gray-700">Cancelar</button>
+        <button id="confirm-btn" class="bg-red-600 text-white p-3 rounded-lg hover:bg-red-700">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Banco de Dados Simulado com LocalStorage
+    let bancoDados = {
+      clientes: [
+        { id: uuidv4(), nome: "João Silva", cidade: "São Paulo", telefone: "11987654321" },
+        { id: uuidv4(), nome: "Maria Oliveira", cidade: "Rio de Janeiro", telefone: "21987654321" },
+        { id: uuidv4(), nome: "Carlos Souza", cidade: "Belo Horizonte", telefone: "31987654321" }
+      ],
+      vendedores: [
+        { id: uuidv4(), nome: "Ana Pereira" },
+        { id: uuidv4(), nome: "Lucas Mendes" },
+        { id: uuidv4(), nome: "Fernanda Costa" }
+      ],
+      designers: [
+        { id: uuidv4(), nome: "Pedro Almeida" },
+        { id: uuidv4(), nome: "Sofia Lima" },
+        { id: uuidv4(), nome: "Rafael Santos" }
+      ],
+      pedidos: [],
+      usuarios: [
+        { username: "admin", password: "admin123" }
+      ]
+    };
+
+    // Carregar dados do LocalStorage
+    function carregarDados() {
+      const dadosSalvos = localStorage.getItem('bancoDados');
+      if (dadosSalvos) {
+        bancoDados = JSON.parse(dadosSalvos);
+      }
+    }
+
+    // Salvar dados no LocalStorage
+    function salvarDados() {
+      localStorage.setItem('bancoDados', JSON.stringify(bancoDados));
+    }
+
+    carregarDados();
+
+    let contadorProducoes = 0;
+    let usuarioLogado = false;
+
+    // Inicialização
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!usuarioLogado) {
+        mostrarModalLogin();
+      }
+      carregarClientes();
+      inicializarValidacaoFormulario();
+      atualizarListaClientes();
+      atualizarListaPedidos();
+      atualizarDashboard();
+    });
+
+    // Login
+    function mostrarModalLogin() {
+      document.getElementById('login-modal').classList.remove('hidden');
+      document.getElementById('main-content').classList.add('hidden');
+    }
+
+    document.getElementById('form-login').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const usuario = bancoDados.usuarios.find(u => u.username === username && u.password === password);
+      if (usuario) {
+        usuarioLogado = true;
+        document.getElementById('login-modal').classList.add('hidden');
+        document.getElementById('main-content').classList.remove('hidden');
+        mostrarTela('dashboard');
+      } else {
+        mostrarNotificacao('Usuário ou senha incorretos.', 'danger');
+      }
+    });
+
+    // Logout
+    function logout() {
+      usuarioLogado = false;
+      mostrarModalLogin();
+    }
+
+    // Validação de Formulários
+    function inicializarValidacaoFormulario() {
+      const formCliente = document.getElementById('form-cliente');
+      formCliente.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (formCliente.checkValidity()) {
+          cadastrarCliente();
+          formCliente.reset();
+          formCliente.classList.remove('was-validated');
+        } else {
+          formCliente.classList.add('was-validated');
+        }
+      });
+    }
+
+    // Carregar Clientes
+    function carregarClientes() {
+      const selectCliente = document.getElementById('cliente');
+      selectCliente.innerHTML = '<option value="">Selecione</option>';
+      bancoDados.clientes.forEach(cliente => {
+        const option = document.createElement('option');
+        option.value = cliente.id;
+        option.textContent = cliente.nome;
+        selectCliente.appendChild(option);
+      });
+    }
+
+    // Preencher Dados do Cliente
+    function preencherDadosCliente() {
+      const clienteId = document.getElementById('cliente').value;
+      const cliente = bancoDados.clientes.find(c => c.id === clienteId);
+      if (cliente) {
+        document.getElementById('cidade').value = cliente.cidade;
+        document.getElementById('telefone').value = cliente.telefone;
+      } else {
+        document.getElementById('cidade').value = '';
+        document.getElementById('telefone').value = '';
+      }
+    }
+
+    // Cadastrar Cliente
+    function cadastrarCliente() {
+      const nome = document.getElementById('nome-cliente').value;
+      const cidade = document.getElementById('cidade-cliente').value;
+      const telefone = document.getElementById('telefone-cliente').value;
+
+      const novoCliente = {
+        id: uuidv4(),
+        nome,
+        cidade,
+        telefone
+      };
+
+      bancoDados.clientes.push(novoCliente);
+      salvarDados();
+      carregarClientes();
+      atualizarListaClientes();
+      atualizarDashboard();
+      mostrarNotificacao(`Cliente ${nome} cadastrado com sucesso!`);
+    }
+
+    // Atualizar Lista de Clientes
+    function atualizarListaClientes() {
+      const listaClientes = document.getElementById('lista-clientes');
+      listaClientes.innerHTML = '';
+      bancoDados.clientes.forEach(cliente => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3">${cliente.nome}</td>
+          <td class="p-3">${cliente.cidade}</td>
+          <td class="p-3">${cliente.telefone}</td>
+        `;
+        listaClientes.appendChild(tr);
+      });
+    }
+
+    // Atualizar Dashboard
+    function atualizarDashboard() {
+      document.getElementById('total-pedidos').textContent = bancoDados.pedidos.length;
+      document.getElementById('pedidos-espera').textContent = bancoDados.pedidos.filter(p => p.status === 'Em Espera').length;
+      document.getElementById('total-clientes').textContent = bancoDados.clientes.length;
+    }
+
+    // Atualizar Lista de Pedidos
+    function atualizarListaPedidos() {
+      const listaPedidos = document.getElementById('lista-pedidos');
+      const filtroCliente = document.getElementById('filtro-cliente').value.toLowerCase();
+      const filtroStatus = document.getElementById('filtro-status').value;
+
+      listaPedidos.innerHTML = '';
+      let pedidosFiltrados = bancoDados.pedidos;
+
+      if (filtroCliente) {
+        pedidosFiltrados = pedidosFiltrados.filter(p => {
+          const cliente = bancoDados.clientes.find(c => c.id === p.clienteId);
+          return cliente && cliente.nome.toLowerCase().includes(filtroCliente);
+        });
+      }
+
+      if (filtroStatus) {
+        pedidosFiltrados = pedidosFiltrados.filter(p => p.status === filtroStatus);
+      }
+
+      pedidosFiltrados.forEach(pedido => {
+        const cliente = bancoDados.clientes.find(c => c.id === pedido.clienteId);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="p-3">${pedido.id.slice(0, 8)}</td>
+          <td class="p-3">${cliente ? cliente.nome : 'Desconhecido'}</td>
+          <td class="p-3">${pedido.data_entrada}</td>
+          <td class="p-3">${pedido.data_entrega}</td>
+          <td class="p-3">${pedido.status}</td>
+          <td class="p-3">
+            <button class="text-blue-600 hover:underline" onclick="editarPedido('${pedido.id}')">Editar</button>
+            <button class="text-red-600 hover:underline ml-2" onclick="confirmarExcluir('${pedido.id}')">Excluir</button>
+          </td>
+        `;
+        listaPedidos.appendChild(tr);
+      });
+    }
+
+    // Filtros
+    document.getElementById('filtro-cliente').addEventListener('input', atualizarListaPedidos);
+    document.getElementById('filtro-status').addEventListener('change', atualizarListaPedidos);
+
+    // Editar Pedido
+    function editarPedido(pedidoId) {
+      const pedido = bancoDados.pedidos.find(p => p.id === pedidoId);
+      if (!pedido) return;
+
+      document.getElementById('id-pedido').value = pedido.id;
+      document.getElementById('cliente').value = pedido.clienteId;
+      preencherDadosCliente();
+      document.getElementById('data-entrada').value = pedido.data_entrada;
+      document.getElementById('data-entrega').value = pedido.data_entrega;
+      document.getElementById('observacoes').value = pedido.observacoes;
+      document.getElementById('forma-pagamento').value = pedido.pagamento.forma_pagamento;
+      document.getElementById('valor-total').value = pedido.pagamento.valor_total;
+      document.getElementById('desconto').value = pedido.pagamento.desconto;
+      document.getElementById('valor-adicional').value = pedido.pagamento.valor_adicional;
+      document.getElementById('observacoes-pagamento').value = pedido.pagamento.observacoes_pagamento;
+
+      document.getElementById('tabsProducoes').innerHTML = '';
+      document.getElementById('conteudoTabsProducoes').innerHTML = '';
+      contadorProducoes = 0;
+
+      pedido.producoes.forEach(prod => {
+        adicionarAba(true);
+        const tabPane = document.getElementById(`producao-${contadorProducoes}`);
+        const selectTipo = tabPane.querySelector('select');
+        selectTipo.value = prod.tipo;
+        mostrarFormPorTipo(selectTipo);
+
+        const campos = tabPane.querySelectorAll('.form-control, .form-select, .form-check-input');
+        if (prod.tipo === 'painel') {
+          campos[1].value = prod.dados.descricao;
+          campos[2].value = prod.dados.largura;
+          campos[3].value = prod.dados.altura;
+          campos[4].value = prod.dados.vendedor_id;
+          campos[5].value = prod.dados.designer_id;
+          campos[6].checked = prod.dados.arte;
+          toggleArteField(campos[6]);
+          campos[7].value = prod.dados.arte_valor;
+          campos[8].checked = prod.dados.arte_exclusiva;
+          campos[9].value = prod.dados.tecido;
+          campos[10].value = prod.dados.emenda;
+          campos[11].checked = prod.dados.overloque;
+          campos[12].checked = prod.dados.elastico;
+          campos[13].checked = prod.dados.ilhos;
+          toggleIlhosFields(campos[13]);
+          campos[14].value = prod.dados.ilhos_quantidade;
+          campos[15].value = prod.dados.ilhos_distancia;
+          campos[16].value = prod.dados.ilhos_valor;
+          campos[17].checked = prod.dados.cordinha;
+          toggleCordinhaFields(campos[17]);
+          campos[18].value = prod.dados.cordinha_quantidade;
+          campos[19].value = prod.dados.cordinha_distancia;
+          campos[20].value = prod.dados.observacao_costura;
+          campos[21].value = prod.dados.valor_painel;
+        }
+      });
+
+      mostrarTela('criar-ficha');
+    }
+
+    // Excluir Pedido
+    function confirmarExcluir(pedidoId) {
+      document.getElementById('confirm-mensagem').textContent = 'Deseja realmente excluir este pedido?';
+      document.getElementById('confirm-btn').onclick = () => {
+        excluirPedido(pedidoId);
+        fecharModalConfirmacao();
+      };
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+
+    function excluirPedido(pedidoId) {
+      bancoDados.pedidos = bancoDados.pedidos.filter(p => p.id !== pedidoId);
+      salvarDados();
+      atualizarListaPedidos();
+      atualizarDashboard();
+      mostrarNotificacao('Pedido excluído com sucesso!');
+    }
+
+    // Adicionar Aba de Produção
+    function adicionarAba(isEdicao = false) {
+      contadorProducoes++;
+
+      const abaId = `producao-${contadorProducoes}`;
+      const tabId = `tab-${contadorProducoes}`;
+
+      const novaAba = document.createElement('li');
+      novaAba.className = 'border-b-2 border-transparent hover:border-blue-600';
+      novaAba.innerHTML = `
+        <button class="py-2 px-4 text-gray-700 ${contadorProducoes === 1 && !isEdicao ? 'border-blue-600' : ''}" id="${tabId}" type="button">
+          Produção ${contadorProducoes}
+          <span class="ml-2 text-red-600 cursor-pointer" onclick="removerAba(event, '${tabId}', '${abaId}')">×</span>
+        </button>
+      `;
+
+      const novoConteudo = document.createElement('div');
+      novoConteudo.className = `p-4 ${contadorProducoes === 1 && !isEdicao ? '' : 'hidden'}`;
+      novoConteudo.id = abaId;
+
+      novoConteudo.innerHTML = `
+        <form class="form-producao grid grid-cols-1 md:grid-cols-2 gap-4" novalidate>
+          <div>
+            <label class="block text-gray-700 mb-2">Tipo de Produção</label>
+            <select class="w-full p-3 border rounded-lg form-select" id="tipo-producao-${contadorProducoes}" required>
+              <option value="">Selecione</option>
+              <option value="painel">Painel</option>
+            </select>
+          </div>
+          <div class="formulario-tipo mt-3"></div>
+        </form>
+      `;
+
+      document.getElementById('tabsProducoes').appendChild(novaAba);
+      document.getElementById('conteudoTabsProducoes').appendChild(novoConteudo);
+
+      // Adicionar evento onchange ao select
+      const selectTipo = novoConteudo.querySelector(`#tipo-producao-${contadorProducoes}`);
+      selectTipo.addEventListener('change', () => mostrarFormPorTipo(selectTipo));
+
+      if (!isEdicao && contadorProducoes === 1) {
+        novaAba.querySelector('button').classList.add('border-b-2', 'border-blue-600');
+      }
+
+      novaAba.querySelector('button').addEventListener('click', () => {
+        document.querySelectorAll('#tabsProducoes button').forEach(btn => btn.classList.remove('border-b-2', 'border-blue-600'));
+        novaAba.querySelector('button').classList.add('border-b-2', 'border-blue-600');
+        document.querySelectorAll('#conteudoTabsProducoes > div').forEach(div => div.classList.add('hidden'));
+        novoConteudo.classList.remove('hidden');
+      });
+
+      if (!isEdicao) {
+        mostrarNotificacao(`Produção ${contadorProducoes} adicionada!`);
+      }
+    }
+
+    // Remover Aba
+    function removerAba(event, tabId, abaId) {
+      event.stopPropagation();
+
+      const tabBtn = document.getElementById(tabId);
+      const tabPane = document.getElementById(abaId);
+      const paiLi = tabBtn.parentElement;
+
+      if (!tabBtn.classList.contains('hidden')) {
+        const outrasAbas = [...document.querySelectorAll('#tabsProducoes li')].filter(li => li !== paiLi);
+        if (outrasAbas.length > 0) {
+          outrasAbas[outrasAbas.length - 1].querySelector('button').click();
+        }
+      }
+
+      paiLi.remove();
+      tabPane.remove();
+      mostrarNotificacao('Produção removida com sucesso!');
+    }
+
+    // Mostrar Formulário por Tipo
+    function mostrarFormPorTipo(selectEl) {
+      const tipo = selectEl.value;
+      const form = selectEl.closest('.form-producao');
+      const container = form.querySelector('.formulario-tipo');
+
+      if (!container) {
+        console.error('Contêiner .formulario-tipo não encontrado');
+        return;
+      }
+
+      container.innerHTML = '';
+
+      if (tipo === 'painel') {
+        container.innerHTML = `
+          <h3 class="text-lg font-semibold text-gray-700 mb-4">Formulário de Painel</h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-gray-700 mb-2">Descrição do Painel</label>
+              <input type="text" class="w-full p-3 border rounded-lg form-control" required>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-gray-700 mb-2">Largura (m)</label>
+                <input type="number" step="0.01" min="0" class="w-full p-3 border rounded-lg form-control" required>
+              </div>
+              <div>
+                <label class="block text-gray-700 mb-2">Altura (m)</label>
+                <input type="number" step="0.01" min="0" class="w-full p-3 border rounded-lg form-control" required>
+              </div>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2">Vendedor</label>
+              <select class="w-full p-3 border rounded-lg form-select" required>
+                <option value="">Selecione</option>
+                ${bancoDados.vendedores.map(v => `<option value="${v.id}">${v.nome}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2">Designer</label>
+              <select class="w-full p-3 border rounded-lg form-select" required>
+                <option value="">Selecione</option>
+                ${bancoDados.designers.map(d => `<option value="${d.id}">${d.nome}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="flex items-center">
+                <input type="checkbox" class="mr-2 form-check-input" id="arte-${contadorProducoes}" onchange="toggleArteField(this)">
+                <span>Arte</span>
+              </label>
+              <div class="hidden mt-2" id="arte-valor-field-${contadorProducoes}">
+                <label class="block text-gray-700 mb-2">Valor da Arte (R$)</label>
+                <input type="number" step="0.01" min="0" class="w-full p-3 border rounded-lg form-control" required>
+              </div>
+            </div>
+            <div>
+              <label class="flex items-center">
+                <input type="checkbox" class="mr-2 form-check-input" id="arte-exclusiva-${contadorProducoes}">
+                <span>Arte Exclusiva</span>
+              </label>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2">Tecido</label>
+              <select class="w-full p-3 border rounded-lg form-select" required>
+                <option value="">Selecione</option>
+                <option value="lona">Lona</option>
+                <option value="voil">Voil</option>
+                <option value="microfibra">Microfibra</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-gray-700 mb-2">Emenda</label>
+              <select class="w-full p-3 border rounded-lg form-select" required>
+                <option value="sem-emenda">Sem emenda</option>
+                <option value="vertical">Vertical</option>
+                <option value="horizontal">Horizontal</option>
+              </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="flex items-center">
+                <input type="checkbox" class="mr-2 form-check-input" id="overloque-${contadorProducoes}">
+                <span>Overloque</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="mr-2 form-check-input" id="elastico-${contadorProducoes}">
+                <span>Elástico</span>
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <label class="flex items-center">
+                <input type="checkbox" class="mr-2 form-check-input" id="ilhos-${contadorProducoes}" onchange="toggleIlhosFields(this)">
+                <span>Ilhós</span>
+              </label>
+              <label class="flex items-center">
+                <input type="checkbox" class="mr-2 form-check-input" id="cordinha-${contadorProducoes}" onchange="toggleCordinhaFields(this)">
+                <span>Cordinha</span>
+              </label>
+            </div>
+            <div class="hidden" id="ilhos-fields-${contadorProducoes}">
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-gray-700 mb-2">Quantidade</label>
+                  <input type="number" min="1" class="w-full p-3 border rounded-lg form-control" required>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-2">Distância (m)</label>
+                  <input type="number" step="0.01" min="0" class="w-full p-3 border rounded-lg form-control" required>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-2">Valor (R$)</label>
+                  <input type="number" step="0.01" min="0" class="w-full p-3 border rounded-lg form-control" required>
+                </div>
+              </div>
+            </div>
+            <div class="hidden" id="cordinha-fields-${contadorProducoes}">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-gray-700 mb-2">Quantidade</label>
+                  <input type="number" min="1" class="w-full p-3 border rounded-lg form-control" required>
+                </div>
+                <div>
+                  <label class="block text-gray-700 mb-2">Distância (m)</label>
+                  <input type="number" step="0.01" min="0" class="w-full p-3 border rounded-lg form-control" required>
+                </div>
+              </div>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-gray-700 mb-2">Observação para Costura</label>
+              <textarea class="w-full p-3 border rounded-lg form-control" rows="3"></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-gray-700 mb-2">Valor do Painel (R$)</label>
+              <input type="number" step="0.01" min="0" class="w-full p-3 border rounded-lg form-control" required>
+            </div>
+          </div>
+        `;
+        const arteCheckbox = container.querySelector(`#arte-${contadorProducoes}`);
+        const ilhosCheckbox = container.querySelector(`#ilhos-${contadorProducoes}`);
+        const cordinhaCheckbox = container.querySelector(`#cordinha-${contadorProducoes}`);
+        if (arteCheckbox) {
+          arteCheckbox.addEventListener('change', () => toggleArteField(arteCheckbox));
+        }
+        if (ilhosCheckbox) {
+          ilhosCheckbox.addEventListener('change', () => toggleIlhosFields(ilhosCheckbox));
+        }
+        if (cordinhaCheckbox) {
+          cordinhaCheckbox.addEventListener('change', () => toggleCordinhaFields(cordinhaCheckbox));
+        }
+      }
+    }
+
+    // Funções para Mostrar/Ocultar Campos Condicionais
+    function toggleArteField(checkbox) {
+      const field = document.getElementById(`arte-valor-field-${checkbox.id.split('-')[1]}`);
+      field.classList.toggle('hidden', !checkbox.checked);
+    }
+
+    function toggleIlhosFields(checkbox) {
+      const field = document.getElementById(`ilhos-fields-${checkbox.id.split('-')[1]}`);
+      field.classList.toggle('hidden', !checkbox.checked);
+    }
+
+    function toggleCordinhaFields(checkbox) {
+      const field = document.getElementById(`cordinha-fields-${checkbox.id.split('-')[1]}`);
+      field.classList.toggle('hidden', !checkbox.checked);
+    }
+
+    // Salvar Tudo
+    function salvarTudo(status) {
+      const formPedido = document.getElementById('form-pedido');
+      const formPagamento = document.getElementById('form-pagamento');
+      const tabs = document.querySelectorAll('#conteudoTabsProducoes .form-producao');
+
+      if (tabs.length === 0) {
+        mostrarNotificacao('Adicione pelo menos uma produção.', 'danger');
+        return;
+      }
+
+      if (!formPedido.checkValidity()) {
+        formPedido.classList.add('was-validated');
+        mostrarNotificacao('Preencha todos os campos obrigatórios do pedido.', 'danger');
+        return;
+      }
+
+      if (!formPagamento.checkValidity()) {
+        formPagamento.classList.add('was-validated');
+        mostrarNotificacao('Preencha todos os campos obrigatórios do pagamento.', 'danger');
+        return;
+      }
+
+      const producoes = [];
+      let isValid = true;
+      tabs.forEach((tab, index) => {
+        const form = tab.querySelector('.form-producao');
+        if (!form.checkValidity()) {
+          form.classList.add('was-validated');
+          isValid = false;
+          return;
+        }
+
+        const tipo = tab.querySelector('select')?.value || '';
+        const campos = tab.querySelectorAll('.form-control, .form-select, .form-check-input');
+        const dados = {};
+
+        if (tipo === 'painel') {
+          dados.descricao = campos[1]?.value || '';
+          dados.largura = campos[2]?.valueAsNumber || 0;
+          dados.altura = campos[3]?.valueAsNumber || 0;
+          dados.vendedor_id = campos[4]?.value || '';
+          dados.designer_id = campos[5]?.value || '';
+          dados.arte = campos[6]?.checked || false;
+          dados.arte_valor = dados.arte ? (campos[7]?.valueAsNumber || 0) : 0;
+          dados.arte_exclusiva = campos[8]?.checked || false;
+          dados.tecido = campos[9]?.value || '';
+          dados.emenda = campos[10]?.value || '';
+          dados.overloque = campos[11]?.checked || false;
+          dados.elastico = campos[12]?.checked || false;
+          dados.ilhos = campos[13]?.checked || false;
+          dados.ilhos_quantidade = dados.ilhos ? (campos[14]?.valueAsNumber || 0) : 0;
+          dados.ilhos_distancia = dados.ilhos ? (campos[15]?.valueAsNumber || 0) : 0;
+          dados.ilhos_valor = dados.ilhos ? (campos[16]?.valueAsNumber || 0) : 0;
+          dados.cordinha = campos[17]?.checked || false;
+          dados.cordinha_quantidade = dados.cordinha ? (campos[18]?.valueAsNumber || 0) : 0;
+          dados.cordinha_distancia = dados.cordinha ? (campos[19]?.valueAsNumber || 0) : 0;
+          dados.observacao_costura = campos[20]?.value || '';
+          dados.valor_painel = campos[21]?.valueAsNumber || 0;
+        }
+
+        producoes.push({
+          id: index + 1,
+          tipo,
+          dados
+        });
+      });
+
+      if (!isValid) {
+        mostrarNotificacao('Preencha todos os campos obrigatórios das produções.', 'danger');
+        return;
+      }
+
+      const pedidoId = document.getElementById('id-pedido').value || uuidv4();
+      const pedidoExistente = bancoDados.pedidos.find(p => p.id === pedidoId);
+
+      const pedido = {
+        id: pedidoId,
+        clienteId: document.getElementById('cliente').value,
+        data_entrada: document.getElementById('data-entrada').value,
+        data_entrega: document.getElementById('data-entrega').value,
+        observacoes: document.getElementById('observacoes').value,
+        producoes,
+        pagamento: {
+          forma_pagamento: document.getElementById('forma-pagamento').value,
+          valor_total: document.getElementById('valor-total').valueAsNumber,
+          desconto: document.getElementById('desconto').valueAsNumber || 0,
+          valor_adicional: document.getElementById('valor-adicional').valueAsNumber || 0,
+          observacoes_pagamento: document.getElementById('observacoes-pagamento').value
+        },
+        status
+      };
+
+      if (pedidoExistente) {
+        const index = bancoDados.pedidos.findIndex(p => p.id === pedidoId);
+        bancoDados.pedidos[index] = pedido;
+      } else {
+        bancoDados.pedidos.push(pedido);
+      }
+
+      salvarDados();
+      formPedido.classList.remove('was-validated');
+      formPagamento.classList.remove('was-validated');
+      atualizarListaPedidos();
+      atualizarDashboard();
+      mostrarNotificacao(`Pedido ${status === 'Salvo' ? 'salvo' : 'colocado em espera'} com sucesso!`);
+    }
+
+    // Limpar Tudo
+    function confirmarLimpar() {
+      document.getElementById('confirm-mensagem').textContent = 'Deseja realmente limpar todos os campos?';
+      document.getElementById('confirm-btn').onclick = () => {
+        limparTudo();
+        fecharModalConfirmacao();
+      };
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+
+    function limparTudo() {
+      document.getElementById('form-pedido').reset();
+      document.getElementById('form-pagamento').reset();
+      document.getElementById('id-pedido').value = '';
+      document.getElementById('tabsProducoes').innerHTML = '';
+      document.getElementById('conteudoTabsProducoes').innerHTML = '';
+      contadorProducoes = 0;
+      document.getElementById('form-pedido').classList.remove('was-validated');
+      document.getElementById('form-pagamento').classList.remove('was-validated');
+      mostrarNotificacao('Todos os campos foram limpos!');
+    }
+
+    function fecharModalConfirmacao() {
+      document.getElementById('confirm-modal').classList.add('hidden');
+    }
+
+    // Gerar Print
+    function gerarPrint() {
+      const area = document.getElementById('tela-criar-ficha');
+      html2canvas(area).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `pedido-${document.getElementById('id-pedido').value || 'novo'}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        mostrarNotificacao('Print gerado com sucesso!');
+      }).catch(() => {
+        mostrarNotificacao('Erro ao gerar o print.', 'danger');
+      });
+    }
+
+    // Gerar PDF
+    function gerarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const pedidoId = document.getElementById('id-pedido').value || 'Novo';
+      const clienteId = document.getElementById('cliente').value;
+      const cliente = bancoDados.clientes.find(c => c.id === clienteId);
+      const dataEntrada = document.getElementById('data-entrada').value;
+      const dataEntrega = document.getElementById('data-entrega').value;
+      const observacoes = document.getElementById('observacoes').value;
+      const formaPagamento = document.getElementById('forma-pagamento').value;
+      const valorTotal = document.getElementById('valor-total').value;
+      const desconto = document.getElementById('desconto').value;
+      const valorAdicional = document.getElementById('valor-adicional').value;
+
+      doc.setFontSize(16);
+      doc.text('Ordem de Produção', 20, 20);
+      doc.setFontSize(12);
+      doc.text(`ID do Pedido: ${pedidoId}`, 20, 30);
+      doc.text(`Cliente: ${cliente ? cliente.nome : 'N/A'}`, 20, 40);
+      doc.text(`Data de Entrada: ${dataEntrada}`, 20, 50);
+      doc.text(`Data de Entrega: ${dataEntrega}`, 20, 60);
+      doc.text(`Observações: ${observacoes || 'Nenhuma'}`, 20, 70);
+
+      let y = 90;
+      doc.setFontSize(14);
+      doc.text('Produções', 20, y);
+      doc.setFontSize(12);
+      y += 10;
+
+      const tabs = document.querySelectorAll('#conteudoTabsProducoes .form-producao');
+      tabs.forEach((tab, index) => {
+        const tipo = tab.querySelector('select')?.value || '';
+        if (tipo === 'painel') {
+          const campos = tab.querySelectorAll('.form-control, .form-select, .form-check-input');
+          doc.text(`Produção ${index + 1}: Painel`, 20, y);
+          y += 10;
+          doc.text(`Descrição: ${campos[1]?.value || ''}`, 30, y);
+          y += 10;
+          doc.text(`Dimensões: ${campos[2]?.value || 0}m x ${campos[3]?.value || 0}m`, 30, y);
+          y += 10;
+          const vendedor = bancoDados.vendedores.find(v => v.id === campos[4]?.value);
+          doc.text(`Vendedor: ${vendedor ? vendedor.nome : 'N/A'}`, 30, y);
+          y += 10;
+          const designer = bancoDados.designers.find(d => d.id === campos[5]?.value);
+          doc.text(`Designer: ${designer ? designer.nome : 'N/A'}`, 30, y);
+          y += 10;
+          doc.text(`Arte: ${campos[6]?.checked ? `Sim (R$ ${campos[7]?.value || 0})` : 'Não'}`, 30, y);
+          y += 10;
+          doc.text(`Arte Exclusiva: ${campos[8]?.checked ? 'Sim' : 'Não'}`, 30, y);
+          y += 10;
+          doc.text(`Tecido: ${campos[9]?.value || ''}`, 30, y);
+          y += 10;
+          doc.text(`Emenda: ${campos[10]?.value || ''}`, 30, y);
+          y += 10;
+          doc.text(`Overloque: ${campos[11]?.checked ? 'Sim' : 'Não'}`, 30, y);
+          y += 10;
+          doc.text(`Elástico: ${campos[12]?.checked ? 'Sim' : 'Não'}`, 30, y);
+          y += 10;
+          doc.text(`Ilhós: ${campos[13]?.checked ? `Sim (Qtd: ${campos[14]?.value || 0}, Dist: ${campos[15]?.value || 0}m, Valor: R$ ${campos[16]?.value || 0})` : 'Não'}`, 30, y);
+          y += 10;
+          doc.text(`Cordinha: ${campos[17]?.checked ? `Sim (Qtd: ${campos[18]?.value || 0}, Dist: ${campos[19]?.value || 0}m)` : 'Não'}`, 30, y);
+          y += 10;
+          doc.text(`Observação Costura: ${campos[20]?.value || 'Nenhuma'}`, 30, y);
+          y += 10;
+          doc.text(`Valor do Painel: R$ ${campos[21]?.value || 0}`, 30, y);
+          y += 10;
+        }
+      });
+
+      doc.setFontSize(14);
+      doc.text('Pagamento', 20, y);
+      doc.setFontSize(12);
+      y += 10;
+      doc.text(`Forma de Pagamento: ${formaPagamento || 'N/A'}`, 20, y);
+      y += 10;
+      doc.text(`Valor Total: R$ ${valorTotal || 0}`, 20, y);
+      y += 10;
+      doc.text(`Desconto: R$ ${desconto || 0}`, 20, y);
+      y += 10;
+      doc.text(`Outros Valores: R$ ${valorAdicional || 0}`, 20, y);
+
+      doc.save(`pedido-${pedidoId}.pdf`);
+      mostrarNotificacao('PDF gerado com sucesso!');
+    }
+
+    // Mostrar Tela
+    function mostrarTela(tela) {
+      document.getElementById('tela-dashboard').classList.add('hidden');
+      document.getElementById('tela-criar-ficha').classList.add('hidden');
+      document.getElementById('tela-cadastro-clientes').classList.add('hidden');
+      document.getElementById('tela-visualizar-pedidos').classList.add('hidden');
+      document.getElementById(`tela-${tela}`).classList.remove('hidden');
+
+      document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('border-l-4', 'border-blue-600', 'bg-gray-800'));
+      document.querySelector(`.sidebar a[onclick="mostrarTela('${tela}')"]`).classList.add('border-l-4', 'border-blue-600', 'bg-gray-800');
+    }
+
+    // Mostrar Notificação
+    function mostrarNotificacao(mensagem, tipo = 'success') {
+      const toast = document.getElementById('toast-notificacao');
+      const toastMensagem = document.getElementById('toast-mensagem');
+      toastMensagem.textContent = mensagem;
+      toast.classList.remove('bg-green-600', 'bg-red-600');
+      toast.classList.add(`bg-${tipo === 'success' ? 'green' : 'red'}-600`);
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
